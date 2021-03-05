@@ -30,9 +30,23 @@ def welcome():
     )
 
 
+@app.route("/api/v1.0/precipitation")
+def precipitation():
+    session=Session(engine)
 
+    results=session.query(Measurement.date, Measurement.prcp)
 
+    session.close()
 
+    prcps=[]
+
+    for date, prcp in results:
+        prcpDict={}
+        prcpDict['date']=date
+        prcpDict['prcp']=prcp
+        prcps.append(prcpDict)
+    
+    return jsonify(prcps)
 
 
 
