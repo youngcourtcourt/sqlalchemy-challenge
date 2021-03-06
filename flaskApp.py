@@ -4,7 +4,7 @@ import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
-import datetime as dt
+from dateutil import parser
 
 from flask import Flask, jsonify
 
@@ -86,6 +86,20 @@ def tobs():
         temps.append(tempDict)
 
     return jsonify(temps)
+
+@app.route("/api/v1.0/<startDate>")
+def start(startDate):
+    
+    for dash in startDate.splitlines():
+        date = parser.parse(dash)
+        standardizedDate=date.strftime("%Y-%m-%d")
+    
+    return jsonify(standardizedDate)
+    
+    # session=Session(engine)
+
+    # startDates=session.query(Measurement.date)
+
 
 
 if __name__ == '__main__':
