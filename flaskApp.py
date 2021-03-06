@@ -27,7 +27,7 @@ def welcome():
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
         f"/api/v1.0/<start><br/>"
-        f"/api/v1.0/<start>/<end>"
+        f"/api/v1.0/<start>/end<end>"
     )
 
 
@@ -81,7 +81,7 @@ def tobs():
     for date, tob in lastTwelveStations:
         tempDict={}
         tempDict['date']=date
-        tempDict['tob']=tob
+        tempDict['tobs']=tob
 
         temps.append(tempDict)
 
@@ -91,16 +91,26 @@ def tobs():
 def start(startDate):
     
     for dash in startDate.splitlines():
+
+        # newDash=dash.replace("/", "-")
         date = parser.parse(dash)
         standardizedDate=date.strftime("%Y-%m-%d")
     
-    return jsonify(standardizedDate)
+    session=Session(engine)
+
+    startDates=session.query(Measurement.date, Measurement.tobs).filter(Measurement.date>=standardizedDate)
+
+    session.close
+
+    startList=[]
+
+    for date, tob in startDates:
+        startDict={}
+        startDict['date']=date
+        startDict['tobs']=tob
+        startList.append(startDict)
     
-    # session=Session(engine)
-
-    # startDates=session.query(Measurement.date)
-
-
+    return jsonify(startList)
 
 if __name__ == '__main__':
     app.run(debug=True)
