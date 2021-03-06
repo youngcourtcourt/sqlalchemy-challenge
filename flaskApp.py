@@ -4,6 +4,7 @@ import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy import create_engine, func
+import datetime as dt
 
 from flask import Flask, jsonify
 
@@ -65,6 +66,27 @@ def stations():
         stations.append(statDict)
 
     return jsonify(stations)
+
+@app.route("/api/v1.0/tobs")
+def tobs():
+    
+    session=Session(engine)
+
+    lastTwelveStations=session.query(Measurement.date, Measurement.tobs).filter(Measurement.station=='USC00519281').filter(Measurement.date<='2017-08-23').filter(Measurement.date>='2016-08-23')
+
+    session.close()
+
+    temps=[]
+
+    for date, tob in lastTwelveStations:
+        tempDict={}
+        tempDict['date']=date
+        tempDict['tob']=tob
+
+        temps.append(tempDict)
+
+    return jsonify(temps)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
