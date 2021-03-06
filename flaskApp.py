@@ -26,8 +26,8 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/<start><br/>"
-        f"/api/v1.0/<start>/end<end>"
+        f"/api/v1.0/start<start><br/>"
+        f"/api/v1.0/start<start>/end<end>"
     )
 
 
@@ -92,22 +92,26 @@ def start(startDate):
     
     for dash in startDate.splitlines():
 
-        # newDash=dash.replace("/", "-")
         date = parser.parse(dash)
         standardizedDate=date.strftime("%Y-%m-%d")
     
     session=Session(engine)
 
-    startDates=session.query(Measurement.date, Measurement.tobs).filter(Measurement.date>=standardizedDate)
+    Min=func.min(Measurement.tobs)
+    Max=func.max(Measurement.tobs)
+    Avg=func.avg(Measurement.tobs)
+
+    startDates=session.query(Measurement.date, Min, Max, Avg).filter(Measurement.date>=standardizedDate)
 
     session.close
 
     startList=[]
 
-    for date, tob in startDates:
+    for date, minTemp, maxTemp, avgTemp in startDates:
         startDict={}
-        startDict['date']=date
-        startDict['tobs']=tob
+        startDict['Min']=minTemp
+        startDict['Max']=maxTemp
+        startDict['Avg']=avgTemp
         startList.append(startDict)
     
     return jsonify(startList)
