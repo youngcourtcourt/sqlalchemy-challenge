@@ -117,6 +117,8 @@ def tobs():
 
 @app.route("/api/v1.0/<startDate>")
 @app.route("/api/v1.0/<startDate>/<endDate>")
+
+#We set default for endDate to None in case the user does not input an end date
 def start(startDate, endDate=None):
     
 #Normalize date to YYYY-MM-DD format
@@ -125,7 +127,8 @@ def start(startDate, endDate=None):
 
         date = parser.parse(dash)
         standardizedStartDate=date.strftime("%Y-%m-%d")
-    
+
+#If user enters end date, convert to YYYY-MM-DD format  
     if endDate is not None:
         for dash in endDate.splitlines():
 
@@ -142,13 +145,15 @@ def start(startDate, endDate=None):
     Min=func.min(Measurement.tobs)
     Max=func.max(Measurement.tobs)
     Avg=func.avg(Measurement.tobs)
+    sel=[Measurement.date, Min, Max, Avg]
 
 #Query the database, filtering on date defined by user and calculate the min, max and avg for each date
+#If user enters end date, construct search query to reflect an end date as well, otherwise no end date
 
     if endDate is not None:
-        rangeDates=session.query(Measurement.date, Min, Max, Avg).filter(Measurement.date>=standardizedStartDate).filter(Measurement.date<=standardizedEndDate).group_by(Measurement.date).all()
+        rangeDates=session.query(*[sel]).filter(Measurement.date>=standardizedStartDate).filter(Measurement.date<=standardizedEndDate).group_by(Measurement.date).all()
     else:
-        rangeDates=session.query(Measurement.date, Min, Max, Avg).filter(Measurement.date>=standardizedStartDate).group_by(Measurement.date).all()   
+        rangeDates=session.query(*[sel]).filter(Measurement.date>=standardizedStartDate).group_by(Measurement.date).all()   
 
     session.close
 
