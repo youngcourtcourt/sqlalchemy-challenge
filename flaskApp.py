@@ -37,8 +37,8 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/start<start><br/>"
-        f"/api/v1.0/start<start>/end<end>"
+        f"/api/v1.0/start<startDate><br/>"
+        f"/api/v1.0/start<startDate>/end<endDate>"
     )
 
 #Define precipitation reoute
@@ -114,15 +114,24 @@ def tobs():
 
     return jsonify(temps)
 
+
 @app.route("/api/v1.0/<startDate>")
-def start(startDate):
+@app.route("/api/v1.0/<startDate>/<endDate>")
+def start(startDate, endDate=None):
     
 #Normalize date to YYYY-MM-DD format
 
     for dash in startDate.splitlines():
 
         date = parser.parse(dash)
-        standardizedDate=date.strftime("%Y-%m-%d")
+        standardizedStartDate=date.strftime("%Y-%m-%d")
+    
+    if endDate is not None:
+        for dash in endDate.splitlines():
+
+            date = parser.parse(dash)
+            standardizedEndDate=date.strftime("%Y-%m-%d")
+    
     
 #Connect to database
 
@@ -136,22 +145,26 @@ def start(startDate):
 
 #Query the database, filtering on date defined by user and calculate the min, max and avg for each date
 
-    startDates=session.query(Measurement.date, Min, Max, Avg).filter(Measurement.date>=standardizedDate).group_by(Measurement.date).all()
+    if endDate is not None:
+        rangeDates=session.query(Measurement.date, Min, Max, Avg).filter(Measurement.date>=standardizedStartDate).filter(Measurement.date<=standardizedEndDate).group_by(Measurement.date).all()
+    else:
+        rangeDates=session.query(Measurement.date, Min, Max, Avg).filter(Measurement.date>=standardizedStartDate).group_by(Measurement.date).all()   
 
     session.close
 
-    startList=[]
+    rangeList=[]
 
 #Unpack database query into 4 variables, store variables in dictionary
 
-    for date, minTemp, maxTemp, avgTemp in startDates:
-        startDict={}
-        startDict['TMin']=minTemp
-        startDict['TMax']=maxTemp
-        startDict['TAvg']=avgTemp
-        startList.append(startDict)
+    for date, minTemp, maxTemp, avgTemp in rangeDates:
+        rangeDict={}
+        rangeDict['Date']=date
+        rangeDict['TMin']=minTemp
+        rangeDict['TMax']=maxTemp
+        rangeDict['TAvg']=avgTemp
+        rangeList.append(rangeDict)
     
-    return jsonify(startList)
+    return jsonify(rangeList)
 
 
 if __name__ == '__main__':
